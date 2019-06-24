@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from textblob import TextBlob
 import seaborn as sns
+import translate_tweets
+import tweet_analyzer
 
 ####input your credentials here
 consumer_key = 'wtFRuCKCv8uB4zchxPpj0IxF7'
@@ -98,53 +100,28 @@ class TwitterListener(StreamListener):
         return False
     print(status)
 
-class TweetAnalyzer():
-  def tweets_to_data_frame(self, tweets):
-    df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
-    df['id'] = np.array([tweet.id for tweet in tweets])
-    df['text'] = np.array([tweet.text for tweet in tweets])
-    df['len'] = np.array([len(tweet.text) for tweet in tweets])
-    df['date'] = np.array([tweet.created_at for tweet in tweets])
-    df['source'] = np.array([tweet.source for tweet in tweets])
-    df['likes'] = np.array([tweet.favorite_count for tweet in tweets])
-    df['retweets'] = np.array([tweet.retweet_count for tweet in tweets])
-    return df
-    
-
-class TranslateTweets():
-  def translate_tweets(self, tweets):
-    array_of_tweets = np.array([tweet.text for tweet in tweets])
-    array_of_tweets_translated = []
-    for tweet in array_of_tweets:
-      t = TextBlob(tweet)
-      ten = t.translate(to="en")
-      array_of_tweets_translated.append(ten.sentiment[0])
-    return array_of_tweets_translated
-
-  def delete_zeros(self, array_of_tweets_translated):
-    new_score_list = []
-    for score in array_of_tweets_translated:
-      if score == 0:
-        pass
-      else:
-        new_score_list.append(score)
-    return new_score_list
 
 
 if __name__ == "__main__":
 
   twitter_client = TwitterClient()
-  tweet_analyzer = TweetAnalyzer()
+  tweet_analyzer = tweet_analyzer.TweetAnalyzer()
   api = twitter_client.get_twitter_client_api()
 
   screen_name_search = input('Ingresa cuenta a buscar: ')
   count_search = input('Ingresa tweets a buscar (máx. 100): ')
+  filter_value = float(input('Ingresa el número de likes de los tweets para filtrar: '))
+  quey_string_tweet = input('Ingresa término a evaluar sentimiento: ')
 
   tweets = api.user_timeline(screen_name=screen_name_search, count=count_search)
-
+  tweets_search = api.search(q=quey_string_tweet, count=100, lang='es')
   """ print(dir(tweets[0].entities))
   print(tweets[0].text) """
   
+
+  ################################
+  ###Here begins searchig for the likes and retweets of an a acount
+  ################################
   df = tweet_analyzer.tweets_to_data_frame(tweets)
 
   #print(df.head())
@@ -152,83 +129,68 @@ if __name__ == "__main__":
   # Get average length over all tweets.
   print('---------------------------')
 
-  print("Promedio de likes de los últimos 200 tweets de", screen_name_search, ":", np.mean(df['likes']))
+  print(f"Promedio de likes de los últimos {count_search} tweets de", screen_name_search, ":", np.mean(df['likes']))
 
   number_most_liked_tweet = np.max(df['likes'])
 
   #Get the number of likes for the most liked tweet
   print('---------------------------')
-  print("Número de likes del tweet más popular de los úlitmos 200 tweets de", screen_name_search, ":", number_most_liked_tweet)
+  print(f"Número de likes del tweet más popular de los úlitmos {count_search} tweets de", screen_name_search, ":", number_most_liked_tweet)
 
-  #Get the number of retweets for the most retweeted tweet
+  
+  df_tweets_array = df.sort_values(by=['likes'], ascending=[False])
+  df_tweet = df_tweets_array[:1]
+  df_filtered = df[df['likes'].values > filter_value]
+
+  print('---------------------------')
+  print("Tweets:", df_tweets_array)
+  print('---------------------------')
+  print("Tweet con más likes:", df_tweet['text'])
+  print('---------------------------')
+  print("Filtrado:", df_filtered)
+  print('---------------------------')
+
 
   #Time Series
-  """ time_likes = pd.Series(data= df['likes'].values, index=df['date'])
+  time_likes = pd.Series(data= df_filtered['likes'].values, index=df_filtered['date'])
   time_likes.plot(figsize=(16,4), label='likes', legend=True)
 
-  time_likes = pd.Series(data= df['retweets'].values, index=df['date'])
-  time_likes.plot(figsize=(16,4), label='retweets', legend=True) """
-  #plt.show()
+  time_likes = pd.Series(data= df_filtered['retweets'].values, index=df_filtered['date'])
+  time_likes.plot(figsize=(16,4), label='retweets', legend=True)
+  plt.show()
+  ################################
+  ###Here ends searchig for the likes and retweets of an a acount
+  ################################
 
-  tweets_translated = TranslateTweets()
-  tweets_translated_array = tweets_translated.translate_tweets(tweets)
+
+
+  
+  ################################
+  ###Here begins searching for the analysis of a single term search in the last 100 tweets
+  ################################
+  """ tweets_translated = translate_tweets.TranslateTweets()
+  tweets_translated_array = tweets_translated.translate_tweets(tweets_search)
 
   array_without_zeros = tweets_translated.delete_zeros(tweets_translated_array)
 
   print(array_without_zeros)
 
   print('---------------------------')
-  print(np.mean(array_without_zeros))
+  print("Promedio del análisis de sentimiento de los tweets:", np.mean(array_without_zeros))
 
   scores_array = np.array(array_without_zeros)
   sns.set()
   ax = sns.distplot(scores_array)
-  plt.show() 
-  """
-
-   t=TextBlob(tweets[8].text)
-  ten = t.translate(to="en")
-  print("------------------")
-  print(ten)
-  print(ten.sentiment, "/n") """
-
-  """ array_of_tweets = np.array([tweet.text for tweet in tweets])
-  array_of_tweets_translated = []
-
-  print('---------------------------')
-  for tweet in array_of_tweets:
-    t = TextBlob(tweet)
-    ten = t.translate(to="en")
-    array_of_tweets_translated.append(ten.sentiment[0])
-  
-  print('---------------------------')
-  print(array_of_tweets)
-  print('---------------------------')
-  print(len(array_of_tweets))
-
-
-  print(array_of_tweets_translated)
-  print('---------------------------')
-  new_score_list = []
-  for score in array_of_tweets_translated:
-    if score == 0:
-      pass
-    else:
-      new_score_list.append(score)
-
-  print('---------------------------')
-  print(np.mean(new_score_list))
-
-  scores_array = np.array(new_score_list)
-  sns.set()
-  ax = sns.distplot(scores_array)
   plt.show() """
-
-
+  ##################################
+  ######Here ends sentiment analysis
+  ##################################
   
 
-  
-  
+
+  ################################
+  ###Here begins the streamer given a list of terms
+  ################################
   #hash_tag_list = ['muertos', 'asesinado', 'fallecido', 'finado']
   #fetched_tweets_filename = "tweets.txt"
 
@@ -237,5 +199,6 @@ if __name__ == "__main__":
   
   #twitter_streamer = TwitterStreamer()
   #twitter_streamer.stream_tweets(fetched_tweets_filename, hash_tag_list)
-
-  
+  ################################
+  ###Here ends the streamer given a list of terms
+  ################################
