@@ -11,6 +11,7 @@ from textblob import TextBlob
 import seaborn as sns
 import translate_tweets
 import tweet_analyzer
+import csv
 
 ####input your credentials here
 consumer_key = 'wtFRuCKCv8uB4zchxPpj0IxF7'
@@ -114,7 +115,7 @@ if __name__ == "__main__":
   quey_string_tweet = input('Ingresa término a evaluar sentimiento: ')
 
   tweets = api.user_timeline(screen_name=screen_name_search, count=count_search)
-  tweets_search = api.search(q=quey_string_tweet, count=100, lang='es')
+  tweets_search = api.search(q=quey_string_tweet, count=count_search, lang='es')
   """ print(dir(tweets[0].entities))
   print(tweets[0].text) """
   
@@ -124,6 +125,7 @@ if __name__ == "__main__":
   ################################
   df = tweet_analyzer.tweets_to_data_frame(tweets)
 
+  #print('--------------Head DF------------')
   #print(df.head())
 
   # Get average length over all tweets.
@@ -152,12 +154,13 @@ if __name__ == "__main__":
 
 
   #Time Series
+  """
   time_likes = pd.Series(data= df_filtered['likes'].values, index=df_filtered['date'])
   time_likes.plot(figsize=(16,4), label='likes', legend=True)
 
   time_likes = pd.Series(data= df_filtered['retweets'].values, index=df_filtered['date'])
   time_likes.plot(figsize=(16,4), label='retweets', legend=True)
-  plt.show()
+  plt.show()"""
   ################################
   ###Here ends searchig for the likes and retweets of an a acount
   ################################
@@ -168,20 +171,58 @@ if __name__ == "__main__":
   ################################
   ###Here begins searching for the analysis of a single term search in the last 100 tweets
   ################################
-  """ tweets_translated = translate_tweets.TranslateTweets()
+  tweets_translated = translate_tweets.TranslateTweets()
   tweets_translated_array = tweets_translated.translate_tweets(tweets_search)
+  array_tweets_score = tweets_translated.array_of_tweets_and_score(tweets_search)
+  array_positive = tweets_translated.order_array_of_tweets_postive(array_tweets_score)
+  array_negative = tweets_translated.order_array_of_tweets_negative(array_tweets_score)
+  df_positive = pd.DataFrame(array_positive, columns=['Texto', 'Score'])
+  df_positive.to_csv('postive.csv')
+  print('--------------------')
+  print('Write completed')
+  print('--------------------')
+
 
   array_without_zeros = tweets_translated.delete_zeros(tweets_translated_array)
+  
+  percentage_neutral = tweets_translated.calculate_percentage_neutral()
+  percentage_positive = tweets_translated.calculate_percentage_positive()
+  percentage_negative = tweets_translated.calculate_percentage_negative()
 
+
+  print('---------------------------')
   print(array_without_zeros)
+  print('------------ARRAY COMPLETE---------------')
+  print(array_tweets_score)
+  print('--------------ARRAY POSITIVE-------------')
+  print(array_positive)
+  print('--------------ARRAY NEGATIVE-------------')
+  print(array_negative)
+  print('---------------------------')
+
 
   print('---------------------------')
   print("Promedio del análisis de sentimiento de los tweets:", np.mean(array_without_zeros))
 
+  print('---------------------------')
+  print('Porcentage neutral:', percentage_neutral)
+  print('---------------------------')
+  print('Porcentage positivo:', percentage_positive)
+  print('---------------------------')
+  print('Porcentage negativo:', percentage_negative)
+  print('---------------------------')
+  print('Total:', percentage_positive + percentage_negative + percentage_neutral)
+  print('---------------------------')
+
+
+
+
+  
+
   scores_array = np.array(array_without_zeros)
   sns.set()
   ax = sns.distplot(scores_array)
-  plt.show() """
+  plt.show()
   ##################################
   ######Here ends sentiment analysis
   ##################################
