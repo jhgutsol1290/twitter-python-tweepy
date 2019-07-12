@@ -23,6 +23,15 @@ class TranslateTweets():
       ten = t.translate(to="en")
       array_tweets_score.append({"text": tweet, "score": ten.sentiment[0]})
     return array_tweets_score
+  
+  def myFunc(self, tweets):
+    my_list = np.array([tweet.full_text for tweet in tweets])
+    array_tweets_score = []
+    for tweet in my_list:
+      t = TextBlob(tweet)
+      ten = t.translate(to="en")
+      array_tweets_score.append({"text": tweet, "score": ten.sentiment[0]})
+    return array_tweets_score
 
   def order_array_of_tweets_postive(self, array_tweets_score):
     array_positive = []
@@ -37,6 +46,18 @@ class TranslateTweets():
       if element['score'] < 0:
         array_negative.append(element)
     return array_negative
+  
+  def text_positive_only(self, array_positive):
+    text_positive = []
+    for comment in array_positive:
+      text_positive.append(comment['text'])
+    return text_positive
+
+  def text_negative_only(self, array_negative):
+    text_negative = []
+    for comment in array_negative:
+      text_negative.append(comment['text'])
+    return text_negative
 
   def delete_zeros(self, array_of_tweets_translated):
     new_score_list = []

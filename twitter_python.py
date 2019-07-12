@@ -115,7 +115,10 @@ if __name__ == "__main__":
   quey_string_tweet = input('Ingresa término a evaluar sentimiento: ')
 
   tweets = api.user_timeline(screen_name=screen_name_search, count=count_search)
+  tweets_search_pagination = Cursor(api.search, q=quey_string_tweet, lang = 'es', tweet_mode='extended').items(5)
   tweets_search = api.search(q=quey_string_tweet, count=count_search, lang='es')
+
+  #tweets_search = api.search(q=quey_string_tweet, count=count_search, lang='es')
   """ print(dir(tweets[0].entities))
   print(tweets[0].text) """
   
@@ -131,13 +134,13 @@ if __name__ == "__main__":
   # Get average length over all tweets.
   print('---------------------------')
 
-  print(f"Promedio de likes de los últimos {count_search} tweets de", screen_name_search, ":", np.mean(df['likes']))
+  print(f"Promedio de likes de los últimos {count_search} tweets de {screen_name_search}: {np.mean(df['likes'])}")
 
   number_most_liked_tweet = np.max(df['likes'])
 
   #Get the number of likes for the most liked tweet
   print('---------------------------')
-  print(f"Número de likes del tweet más popular de los úlitmos {count_search} tweets de", screen_name_search, ":", number_most_liked_tweet)
+  print(f"Número de likes del tweet más popular de los úlitmos {count_search} tweets de {screen_name_search} {number_most_liked_tweet}")
 
   
   df_tweets_array = df.sort_values(by=['likes'], ascending=[False])
@@ -174,36 +177,36 @@ if __name__ == "__main__":
   tweets_translated = translate_tweets.TranslateTweets()
   tweets_translated_array = tweets_translated.translate_tweets(tweets_search)
   array_tweets_score = tweets_translated.array_of_tweets_and_score(tweets_search)
+  #array_pagination = tweets_translated.myFunc(tweets_search_pagination)
   array_positive = tweets_translated.order_array_of_tweets_postive(array_tweets_score)
   array_negative = tweets_translated.order_array_of_tweets_negative(array_tweets_score)
-  df_positive = pd.DataFrame(array_positive, columns=['Texto', 'Score'])
-  df_positive.to_csv('postive.csv')
-  print('--------------------')
-  print('Write completed')
-  print('--------------------')
-
-
+  text_positive = tweets_translated.text_positive_only(array_positive)
+  text_negative = tweets_translated.text_negative_only(array_negative)
   array_without_zeros = tweets_translated.delete_zeros(tweets_translated_array)
-  
   percentage_neutral = tweets_translated.calculate_percentage_neutral()
   percentage_positive = tweets_translated.calculate_percentage_positive()
   percentage_negative = tweets_translated.calculate_percentage_negative()
 
+  file = open('Positive.txt', 'w', encoding='utf-8')
+  file.write('text_positive=%s'%text_positive)
+  file.close()
+  file = open('Negative.txt', 'w', encoding='utf-8')
+  file.write('text_negative=%s'%text_negative)
+  file.close()
 
+  print('---------------------------')
+  print('Write completed')
   print('---------------------------')
   print(array_without_zeros)
   print('------------ARRAY COMPLETE---------------')
-  print(array_tweets_score)
+  print('---------------------------')
+  #print(array_tweets_score)
   print('--------------ARRAY POSITIVE-------------')
   print(array_positive)
   print('--------------ARRAY NEGATIVE-------------')
   print(array_negative)
   print('---------------------------')
-
-
-  print('---------------------------')
   print("Promedio del análisis de sentimiento de los tweets:", np.mean(array_without_zeros))
-
   print('---------------------------')
   print('Porcentage neutral:', percentage_neutral)
   print('---------------------------')
@@ -213,12 +216,9 @@ if __name__ == "__main__":
   print('---------------------------')
   print('Total:', percentage_positive + percentage_negative + percentage_neutral)
   print('---------------------------')
-
-
-
-
-  
-
+  """ print('-----------PAGINATION------------')
+  print(array_pagination)
+  print('---------------------------') """
   scores_array = np.array(array_without_zeros)
   sns.set()
   ax = sns.distplot(scores_array)
