@@ -115,7 +115,7 @@ if __name__ == "__main__":
   quey_string_tweet = input('Ingresa término a evaluar sentimiento: ')
 
   tweets = api.user_timeline(screen_name=screen_name_search, count=count_search)
-  tweets_search_pagination = Cursor(api.search, q=quey_string_tweet, lang = 'es', tweet_mode='extended').items(5)
+  tweets_search_pagination = Cursor(api.search, q=quey_string_tweet, lang = 'es', tweet_mode='extended').items(200)
   tweets_search = api.search(q=quey_string_tweet, count=count_search, lang='es')
 
   #tweets_search = api.search(q=quey_string_tweet, count=count_search, lang='es')
@@ -175,8 +175,8 @@ if __name__ == "__main__":
   ###Here begins searching for the analysis of a single term search in the last 100 tweets
   ################################
   tweets_translated = translate_tweets.TranslateTweets()
-  tweets_translated_array = tweets_translated.translate_tweets(tweets_search)
-  array_tweets_score = tweets_translated.array_of_tweets_and_score(tweets_search)
+  tweets_translated_array = tweets_translated.translate_tweets(tweets_search_pagination)
+  array_tweets_score = tweets_translated.array_of_tweets_and_score_method()
   #array_pagination = tweets_translated.myFunc(tweets_search_pagination)
   array_positive = tweets_translated.order_array_of_tweets_postive(array_tweets_score)
   array_negative = tweets_translated.order_array_of_tweets_negative(array_tweets_score)
@@ -200,7 +200,8 @@ if __name__ == "__main__":
   print(array_without_zeros)
   print('------------ARRAY COMPLETE---------------')
   print('---------------------------')
-  #print(array_tweets_score)
+  print(array_tweets_score)
+  print('-'*50)
   print('--------------ARRAY POSITIVE-------------')
   print(array_positive)
   print('--------------ARRAY NEGATIVE-------------')

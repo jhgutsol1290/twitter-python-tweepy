@@ -2,27 +2,23 @@ from textblob import TextBlob
 import numpy as np
 
 class TranslateTweets():
-  def __init__(self, array_of_tweets_translated=[]):
+  def __init__(self, array_of_tweets_translated=[], array_of_tweets_and_score=[]):
     self.array_of_tweets_translated = array_of_tweets_translated
-
+    self.array_of_tweets_and_score = array_of_tweets_and_score
 
   def translate_tweets(self, tweets):
-    array_of_tweets = np.array([tweet.text for tweet in tweets])
+    array_of_tweets = np.array([tweet.full_text for tweet in tweets])
     #array_of_tweets_translated = []
+    #array_tweets_score = []
     for tweet in array_of_tweets:
       t = TextBlob(tweet)
       ten = t.translate(to="en")
       self.array_of_tweets_translated.append(ten.sentiment[0])
+      self.array_of_tweets_and_score.append({"text": tweet, "score": ten.sentiment[0]})
     return self.array_of_tweets_translated
   
-  def array_of_tweets_and_score(self, tweets):
-    array_of_tweets = np.array([tweet.text for tweet in tweets])
-    array_tweets_score = []
-    for tweet in array_of_tweets:
-      t = TextBlob(tweet)
-      ten = t.translate(to="en")
-      array_tweets_score.append({"text": tweet, "score": ten.sentiment[0]})
-    return array_tweets_score
+  def array_of_tweets_and_score_method(self):
+    return self.array_of_tweets_and_score
   
   def myFunc(self, tweets):
     my_list = np.array([tweet.full_text for tweet in tweets])
